@@ -8,7 +8,7 @@ import '@mantine/core/styles.css';
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <MantineProvider withGlobalStyles withNormalizeCSS>
-      <Notifications position="top-center" />
+      <Notifications />
       <App />
     </MantineProvider>
   </React.StrictMode>
