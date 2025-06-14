@@ -17,6 +17,12 @@ type Advice = {
   isReal: boolean;
 };
 
+type HistoryEntry = {
+  text: string;
+  wasReal: boolean;
+  userWasRight: boolean;
+};
+
 function getRandomInt(max: number) {
   return Math.floor(Math.random() * max);
 }
@@ -26,6 +32,7 @@ const App = () => {
   const [score, setScore] = useState(10);
   const [gameOver, setGameOver] = useState(false);
   const [showCard, setShowCard] = useState(false);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   const getAdvice = async () => {
     setShowCard(false);
@@ -51,9 +58,18 @@ const App = () => {
       title: correct ? "Bonne réponse !" : "Mauvaise réponse !",
       message: correct ? "Tu gagnes 1 point." : "Tu perds 1 point.",
       color: correct ? "green" : "red",
-     
       autoClose: 1500,
     });
+
+    // Add to history
+    setHistory((prev) => [
+      {
+        text: advice.text,
+        wasReal: advice.isReal,
+        userWasRight: correct,
+      },
+      ...prev.slice(0, 9), // Keep only last 10
+    ]);
 
     if (newScore >= 20 || newScore <= 0) {
       setTimeout(() => setGameOver(true), 1000);
@@ -65,6 +81,7 @@ const App = () => {
   const restart = () => {
     setScore(10);
     setGameOver(false);
+    setHistory([]);
     getAdvice();
   };
 
@@ -81,7 +98,7 @@ const App = () => {
         Score : <b>{score}</b>
       </Text>
 
-      <Transition mounted={showCard && !gameOver} transition="fade" duration={300} timingFunction="ease" >
+      <Transition mounted={showCard && !gameOver} transition="fade" duration={300} timingFunction="ease">
         {(styles) =>
           advice ? (
             <Card
@@ -96,9 +113,9 @@ const App = () => {
               <Text size="xl" ta="center" fw={500} mb="lg">
                 “{advice.text}”
               </Text>
-              <Group justify="center" >
+              <Group justify="center">
                 <Button size="md" color="green" onClick={() => handleAnswer(true)}>
-                Vrai
+                  Vrai
                 </Button>
                 <Button size="md" color="red" onClick={() => handleAnswer(false)}>
                   Faux
@@ -108,6 +125,7 @@ const App = () => {
           ) : null
         }
       </Transition>
+
       {gameOver && (
         <Center mt="xl">
           <Card shadow="xl" padding="xl" radius="lg" withBorder bg="blue.0">
@@ -115,10 +133,31 @@ const App = () => {
               {score >= 20 ? "Bravo, tu as gagné !" : "Oops, tu as perdu..."}
             </Title>
             <Button fullWidth mt="lg" onClick={restart}>
-              Rejouer
+              🔁 Rejouer
             </Button>
           </Card>
         </Center>
+      )}
+
+      {history.length > 0 && (
+        <Card mt="xl" shadow="sm" padding="md" radius="md" withBorder>
+          <Title order={4} mb="sm">
+            Historique des réponses
+          </Title>
+          {history.map((item, index) => (
+            <Group key={index} spacing="xs" align="center" mb="xs">
+              <Text size="sm" c={item.userWasRight ? "green" : "red"} fw={500}>
+                {item.userWasRight ? "✔️" : "❌"}
+              </Text>
+              <Text size="sm" c="dimmed" fs="italic">
+                “{item.text}”
+              </Text>
+              <Text size="xs" c="gray">
+                ({item.wasReal ? "Réel" : "Faux"})
+              </Text>
+            </Group>
+          ))}
+        </Card>
       )}
     </Container>
   );
